@@ -58,30 +58,22 @@ bun test:e2e e2e/homepage.spec.ts            # Run specific e2e test file
 ## Project Architecture
 
 ### Technology Stack
-- **Runtime**: Node.js 22+, Bun 1.3+ (package manager)
-- **Frontend**: Vue 3+ (Composition API + `<script setup>`), TypeScript 5, Vite 7+
-- **Styling**: TailwindCSS v4 with utility classes, Tailwind merge, CVA for component variants
-- **State Management**: Pinia stores with setup syntax
-- **Routing**: Vue Router 4 with lazy loading
-- **Icons**: Lucide Vue Next
-- **Authentication**: OSM OAuth 2.0 Authorization Code flow with PKCE, osm-auth v3+
-- **Testing**: Vitest (unit) + Playwright (e2e) + jsdom environment
-- **Code Quality**: Biome for formatting/linting, strict TypeScript, Lefthook 2+ (git hooks)
-- **Future Backend**: SurrealDB 2.3+ with zero-knowledge client-side encryption
+
+See **[Technology Stack Documentation](./.claude/tech-stack.md)** for complete specifications including:
+- Runtime environment (Node.js 22+, Bun 1.3+)
+- Frontend framework (Vue 3+, TypeScript, Vite 7+)
+- Authentication (OAuth 2.0 with PKCE, osm-auth v3+)
+- Testing infrastructure (Vitest, Playwright)
+- Code quality tools (Biome, Lefthook 2+)
+- Future backend architecture (SurrealDB 2.3+)
 
 ### Directory Structure
-```
-src/
-├── components/          # Vue components (to be created)
-├── stores/             # Pinia stores (counter.ts example exists)
-├── router/             # Vue Router configuration (index.ts)
-├── lib/                # Utility functions (utils.ts for CSS helpers)
-└── style.css          # Global Tailwind imports
 
-tests/
-├── unit/               # Unit test files (*.spec.ts, *.test.ts)
-└── e2e/                # Playwright e2e tests (separate config)
-```
+See **[Filesystem Structure Documentation](./.claude/filesystem.md)** for complete project organization including:
+- Source code organization (`src/` structure)
+- Testing organization (`tests/` and `e2e/`)
+- Configuration files and naming conventions
+- Development workflow and file creation guidelines
 
 ### Key Configuration Files
 - `vite.config.ts`: Vite build config with Vue plugin, TailwindCSS, devtools
