@@ -1,5 +1,10 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -10,6 +15,7 @@
 	},
 	"formatter": {
 		"enabled": true,
+    "useEditorconfig": true,
 		"indentStyle": "tab"
 	},
 	"linter": {

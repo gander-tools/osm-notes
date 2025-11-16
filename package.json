@@ -9,6 +9,12 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "check": "biome check",
+    "check:fix": "biome check --write",
+    "check:format": "biome format",
+    "check:format:fix": "biome format --write",
+    "check:lint": "biome lint",
+    "check:lint:fix": "biome lint --write",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:e2e": "playwright test",
