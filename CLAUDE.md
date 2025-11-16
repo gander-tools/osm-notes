@@ -75,6 +75,15 @@ See **[Filesystem Structure Documentation](./.claude/filesystem.md)** for comple
 - Configuration files and naming conventions
 - Development workflow and file creation guidelines
 
+### Database Schema
+
+See **[SurrealDB Schema Documentation](./.claude/db-schema.md)** for complete database architecture including:
+- Zero-knowledge encryption implementation (PBKDF2 + Argon2)
+- Table definitions and relationships (User, Note, Data)
+- Authentication flow with DEFINE ACCESS
+- Client-side integration examples with surrealdb npm package
+- Security considerations and performance optimizations
+
 ### Key Configuration Files
 - `vite.config.ts`: Vite build config with Vue plugin, TailwindCSS, devtools
 - `vitest.config.ts`: Test config with jsdom environment, excludes e2e tests
