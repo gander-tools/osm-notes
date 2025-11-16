@@ -151,10 +151,29 @@ A web application combining:
 - Encryption key generation from password for SurrealDB
 
 #### 1.2 OSM OAuth Integration (M)
-- OAuth 2.0 flow with OSM API
-- Required scopes: `read_prefs`, `write_prefs`, `write_api`
-- Explanation of each scope in UI before authorization
-- Storage of OSM user ID in User table (unencrypted)
+- **OAuth 2.0 Authorization Code flow with PKCE** (public client mode)
+- **Library**: osm-auth v3+ for implementation
+- **Security**: PKCE (Proof Key for Code Exchange) replaces deprecated Implicit Flow
+- **Client Type**: Public client (no client secret required)
+- **PKCE Implementation**:
+  - Generate code_verifier (128 random bytes, base64url encoded)
+  - Generate code_challenge (SHA-256 hash of code_verifier, base64url encoded)
+  - Use code_challenge_method=S256
+- **Authorization Request Parameters**:
+  - client_id: Public OAuth client ID for OSM Notes
+  - redirect_uri: Web application callback URL
+  - scope: `read_prefs`, `write_prefs`, `write_api`
+  - state: CSRF protection parameter (random string)
+  - code_challenge + code_challenge_method=S256
+- **Token Exchange**: Authorization code + code_verifier → access_token
+- **Token Storage**: localStorage or sessionStorage (OSM tokens don't expire automatically)
+- **Scope Explanations** in UI before authorization:
+  - `read_prefs`: Read user profile information
+  - `write_prefs`: Update user profile settings
+  - `write_api`: Create/modify OSM objects via changesets
+- **Data Storage**:
+  - OSM user ID in User table (unencrypted)
+  - Access token in localStorage/sessionStorage (client-side only, never sent to SurrealDB)
 
 #### 1.3 OpenAI API Key Management (S)
 - Optional input during onboarding (skippable)
@@ -295,12 +314,23 @@ DEFINE FIELD updated_at ON Data TYPE datetime;
 - "Edit tags" button for manual corrections before commit
 
 #### 5.3 Commit to OSM (M)
-- OAuth-authenticated PUT request to OSM API `/api/0.6/changeset/create`
-- Upload changeset XML
-- Close changeset after successful upload
-- Error handling: retry with exponential backoff (max 3 attempts)
-- Success: Mark note as "committed" in local DB + SurrealDB
-- Store OSM changeset ID for reference
+- **Authentication**: Retrieve OAuth access token from localStorage/sessionStorage
+- **Authorization Header**: `Authorization: Bearer {access_token}` for all OSM API requests
+- **Changeset Creation**: OAuth-authenticated PUT request to OSM API `/api/0.6/changeset/create`
+- **Upload Process**:
+  1. Validate access token (check if still valid)
+  2. Create changeset with required metadata (comment, created_by, source)
+  3. Upload changeset XML with object modifications
+  4. Close changeset after successful upload
+- **Error Handling**:
+  - 401 Unauthorized: Token expired/invalid → trigger OAuth re-authorization flow
+  - 429 Rate Limited: Exponential backoff with jitter (max 3 attempts)
+  - 4xx Client Errors: Display user-friendly error messages
+  - 5xx Server Errors: Retry with exponential backoff
+- **Success Flow**:
+  - Mark note as "committed" in local IndexedDB + SurrealDB
+  - Store OSM changeset ID for reference and audit trail
+  - Update UI with success confirmation
 
 ### 6. User Interface
 
@@ -352,7 +382,8 @@ Transparent message in UI:
 - Cookies: Only essential (session), no tracking → no consent banner needed
 - SurrealDB data: "Your data is encrypted client-side. The author has no access to note content but has physical access to the server."
 - OpenAI API: "Audio and images sent directly to OpenAI with your API key. Data does not pass through our servers."
-- OSM OAuth: Link to OSM Privacy Policy
+- OSM OAuth: "OAuth access tokens stored locally in your browser only. Never sent to our servers. Link to OSM Privacy Policy"
+- Token Storage: "OAuth access tokens stored in localStorage/sessionStorage for your convenience. Clear browser data to remove tokens."
 - Checkbox: "I confirm that I understand data retention policies" (mandatory at registration)
 
 #### 7.2 Analytics (S)
@@ -383,9 +414,10 @@ Transparent message in UI:
 ### Tech Stack
 
 #### Frontend
-- Framework: Vue.js 3 (Composition API)
+- Runtime: Node.js 22+, Bun 1.3+ (package manager)
+- Framework: Vue.js 3+ (Composition API)
 - Language: TypeScript 5 (strict mode)
-- Build tool: Vite
+- Build tool: Vite 7+
 - UI components: shadcn-vue
 - Map: Leaflet.js + leaflet.osmdatapicker plugin
 - State management: Pinia
@@ -393,10 +425,10 @@ Transparent message in UI:
 - Forms: VeeValidate + Zod schemas
 - Rich text: TipTap
 - Testing: Vitest (unit), Testing Library (integration), Playwright (e2e)
-- Code quality: Biome.js (formatting + linting)
+- Code quality: Biome.js (formatting + linting), Lefthook 2+ (git hooks)
 
 #### Backend
-- Database: SurrealDB (self-hosted, latest stable)
+- Database: SurrealDB 2.3+ (self-hosted)
 - Hosting: Docker Compose on VPS
 - Encryption: Web Crypto API (client-side)
   - PBKDF2-HMAC-SHA256 for key derivation
@@ -439,6 +471,8 @@ User Browser
 ```
 
 #### Authentication Flow
+
+**SurrealDB Authentication:**
 ```
 1. User enters password
 2. PBKDF2 derives encryption key (client-side)
@@ -446,7 +480,38 @@ User Browser
 4. Fetch encrypted data from SurrealDB
 5. Decrypt in browser with encryption key
 6. Store decrypted data in memory (session)
-7. OSM OAuth for changeset commits (separate flow)
+```
+
+**OSM OAuth 2.0 PKCE Flow:**
+```
+1. User clicks "Connect to OSM" button
+2. Generate PKCE parameters (client-side):
+   - code_verifier: 128 random bytes, base64url encoded
+   - code_challenge: SHA-256 hash of code_verifier, base64url encoded
+   - state: Random CSRF protection string
+3. Redirect to OSM authorization endpoint:
+   - https://www.openstreetmap.org/oauth2/authorize
+   - client_id: OSM Notes public client ID
+   - redirect_uri: https://osm-notes.app/oauth/callback
+   - scope: read_prefs write_prefs write_api
+   - response_type: code
+   - code_challenge + code_challenge_method=S256
+   - state: CSRF token
+4. User authorizes on OSM website (enters OSM credentials)
+5. OSM redirects back to application with:
+   - authorization_code (temporary, expires in 10 minutes)
+   - state (for verification)
+6. Verify state parameter matches (CSRF protection)
+7. Exchange authorization code for access token:
+   - POST https://www.openstreetmap.org/oauth2/token
+   - grant_type: authorization_code
+   - client_id: OSM Notes public client ID
+   - code: authorization_code from step 5
+   - code_verifier: original verifier from step 2
+   - redirect_uri: same as authorization request
+8. Receive access_token from OSM (no refresh token, doesn't expire automatically)
+9. Store access_token in localStorage/sessionStorage for reuse
+10. Use Bearer token for authenticated OSM API requests
 ```
 
 ### Performance Requirements
@@ -722,6 +787,8 @@ User Browser
 | OCR | Optical Character Recognition (text extraction from images) |
 | Overpass API | Read-only OSM query API |
 | PBKDF2 | Password-Based Key Derivation Function 2 |
+| PKCE | Proof Key for Code Exchange - OAuth 2.0 security extension for public clients using code challenge/verifier |
+| Public Client | OAuth 2.0 client type without client secret, uses PKCE for security (e.g., web apps, mobile apps) |
 | PWA | Progressive Web App (web app working offline) |
 | SurrealDB | Multi-model database with built-in authentication |
 | Zero-knowledge | Architecture where server has no access to plaintext user data |

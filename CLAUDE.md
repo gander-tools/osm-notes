@@ -58,14 +58,16 @@ bun test:e2e e2e/homepage.spec.ts            # Run specific e2e test file
 ## Project Architecture
 
 ### Technology Stack
-- **Frontend**: Vue 3 (Composition API + `<script setup>`), TypeScript 5, Vite 7
+- **Runtime**: Node.js 22+, Bun 1.3+ (package manager)
+- **Frontend**: Vue 3+ (Composition API + `<script setup>`), TypeScript 5, Vite 7+
 - **Styling**: TailwindCSS v4 with utility classes, Tailwind merge, CVA for component variants
 - **State Management**: Pinia stores with setup syntax
 - **Routing**: Vue Router 4 with lazy loading
 - **Icons**: Lucide Vue Next
+- **Authentication**: OSM OAuth 2.0 Authorization Code flow with PKCE, osm-auth v3+
 - **Testing**: Vitest (unit) + Playwright (e2e) + jsdom environment
-- **Code Quality**: Biome for formatting/linting, strict TypeScript
-- **Future Backend**: SurrealDB with zero-knowledge client-side encryption
+- **Code Quality**: Biome for formatting/linting, strict TypeScript, Lefthook 2+ (git hooks)
+- **Future Backend**: SurrealDB 2.3+ with zero-knowledge client-side encryption
 
 ### Directory Structure
 ```
@@ -94,6 +96,32 @@ tests/
 - **Routing**: Implement lazy loading, route guards, and meta fields for auth/permissions
 - **Testing**: Unit tests with Vitest, e2e tests with Playwright, jsdom for DOM testing
 - **Encryption**: All user data encrypted client-side (AES-256-GCM), server stores only encrypted content
+
+### Authentication Architecture
+- **OAuth 2.0 Flow**: Authorization Code flow with PKCE (Proof Key for Code Exchange)
+- **Client Type**: Public client (no client secret required)
+- **Library**: osm-auth v3+ for OpenStreetMap OAuth implementation
+- **Security Standard**: PKCE replaces deprecated OAuth 2.0 Implicit Flow
+- **Token Storage**: localStorage or sessionStorage (OSM tokens don't expire automatically)
+- **Required Scopes**: `read_prefs`, `write_prefs`, `write_api`
+
+### Authentication Implementation Guidelines
+- **PKCE Parameters**:
+  - Generate code_verifier: 128 random bytes, base64url encoded
+  - Generate code_challenge: SHA-256 hash of code_verifier, base64url encoded
+  - Use code_challenge_method=S256
+- **Authorization Flow**:
+  - Include state parameter for CSRF protection
+  - Verify state parameter on callback
+  - Exchange authorization code + code_verifier for access_token
+- **Token Management**:
+  - Store access_token in localStorage/sessionStorage for persistence
+  - Include Authorization: Bearer {token} header for OSM API requests
+  - Handle 401 Unauthorized errors by triggering re-authorization
+- **Error Handling**:
+  - Implement exponential backoff for rate limits
+  - Provide user-friendly error messages for OAuth failures
+  - Test OAuth flow extensively on mobile browsers
 
 ### Browser Requirements
 - Development: Chrome/Edge/Brave with Vue devtools extension recommended
