@@ -133,6 +133,11 @@ DEFINE INDEX data_note_created ON data FIELDS note_id, created_at;
 
 ### Using with SurrealDB npm package
 
+```bash
+# Install SurrealDB client
+bun add surrealdb@1.3.2
+```
+
 ```typescript
 import { Surreal } from 'surrealdb';
 
@@ -284,4 +289,4 @@ UPDATE note SET osm_changeset_id = NONE, committed_at = NONE;
 
 **Schema Version**: 1.0.0
 **Last Updated**: November 16, 2025
-**Compatible with**: SurrealDB 2.3+, surrealdb npm package latest
+**Compatible with**: SurrealDB 2.3+, surrealdb npm package v1.3.2

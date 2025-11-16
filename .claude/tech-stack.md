@@ -35,7 +35,7 @@ OSM Notes technology stack with versions and implementation details.
 
 - **OAuth 2.0 Flow**: Authorization Code flow with PKCE (Proof Key for Code Exchange)
 - **Client Type**: Public client (no client secret required)
-- **Library**: osm-auth v3+ for OpenStreetMap OAuth implementation
+- **Library**: osm-auth v3.1.1+ for OpenStreetMap OAuth implementation
 - **Security Standard**: PKCE replaces deprecated OAuth 2.0 Implicit Flow
 - **Token Storage**: localStorage or sessionStorage (OSM tokens don't expire automatically)
 - **Required Scopes**: `read_prefs`, `write_prefs`, `write_api`
@@ -85,7 +85,8 @@ OSM Notes technology stack with versions and implementation details.
 - **vue**: ^3.5.22
 - **vue-router**: ^4.6.3
 - **pinia**: ^3.0.3
-- **osm-auth**: ^3.0.0
+- **osm-auth**: ^3.1.1
+- **surrealdb**: ^1.3.2
 - **@vueuse/core**: ^14.0.0
 
 ### Styling Dependencies

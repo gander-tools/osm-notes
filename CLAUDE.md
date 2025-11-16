@@ -62,7 +62,7 @@ bun test:e2e e2e/homepage.spec.ts            # Run specific e2e test file
 See **[Technology Stack Documentation](./.claude/tech-stack.md)** for complete specifications including:
 - Runtime environment (Node.js 22+, Bun 1.3+)
 - Frontend framework (Vue 3+, TypeScript, Vite 7+)
-- Authentication (OAuth 2.0 with PKCE, osm-auth v3+)
+- Authentication (OAuth 2.0 with PKCE, osm-auth v3.1.1+)
 - Testing infrastructure (Vitest, Playwright)
 - Code quality tools (Biome, Lefthook 2+)
 - Future backend architecture (SurrealDB 2.3+)
@@ -81,7 +81,7 @@ See **[SurrealDB Schema Documentation](./.claude/db-schema.md)** for complete da
 - Zero-knowledge encryption implementation (PBKDF2 + Argon2)
 - Table definitions and relationships (User, Note, Data)
 - Authentication flow with DEFINE ACCESS
-- Client-side integration examples with surrealdb npm package
+- Client-side integration examples with surrealdb npm package v1.3.2
 - Security considerations and performance optimizations
 
 See **[Database Planning Summary](./.claude/db-plan.md)** for comprehensive planning decisions including:
@@ -107,7 +107,7 @@ See **[Database Planning Summary](./.claude/db-plan.md)** for comprehensive plan
 ### Authentication Architecture
 - **OAuth 2.0 Flow**: Authorization Code flow with PKCE (Proof Key for Code Exchange)
 - **Client Type**: Public client (no client secret required)
-- **Library**: osm-auth v3+ for OpenStreetMap OAuth implementation
+- **Library**: osm-auth v3.1.1+ for OpenStreetMap OAuth implementation
 - **Security Standard**: PKCE replaces deprecated OAuth 2.0 Implicit Flow
 - **Token Storage**: localStorage or sessionStorage (OSM tokens don't expire automatically)
 - **Required Scopes**: `read_prefs`, `write_prefs`, `write_api`
