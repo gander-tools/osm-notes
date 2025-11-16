@@ -1,7 +1,104 @@
-# AI Rules for osm-notes
+# CLAUDE.md
 
-OSM Notes is a web application enabling advanced OpenStreetMap mappers to collect, aggregate, 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# OSM Notes Project
+
+OSM Notes is a web application enabling advanced OpenStreetMap mappers to collect, aggregate,
 and process field data while maintaining full privacy through zero-knowledge encryption.
+
+## Development Commands
+
+### Project Setup
+```sh
+bun install                    # Install dependencies
+```
+
+### Development
+```sh
+bun dev                        # Start development server with hot reload on localhost:5173
+bun preview                    # Preview production build on localhost:4173
+```
+
+### Build & Type Checking
+```sh
+bun run build                  # Full production build (type-check + build)
+bun run build-only             # Build without type checking
+bun run type-check             # Type check only with vue-tsc
+```
+
+### Code Quality
+```sh
+bun run check                  # Run all Biome checks (format + lint)
+bun run check:fix              # Auto-fix all Biome issues
+bun run check:format           # Check formatting only
+bun run check:format:fix       # Fix formatting issues
+bun run check:lint             # Check linting only
+bun run check:lint:fix         # Fix linting issues
+```
+
+### Testing
+```sh
+bun test:unit                  # Run Vitest unit tests in watch mode
+bun test:unit --run            # Run unit tests once
+bun test:unit --coverage       # Run with coverage report
+bun test:e2e                   # Run Playwright e2e tests (requires build first)
+bun test:e2e --debug           # Run e2e tests in debug mode
+bun test:e2e --project=chromium # Run e2e tests on specific browser
+npx playwright install         # Install browsers for first-time e2e setup
+```
+
+### Single Test Execution
+```sh
+bun test:unit tests/unit/App.spec.ts         # Run specific unit test file
+bun test:unit -t "counter test name"         # Run specific test by name pattern
+bun test:e2e e2e/homepage.spec.ts            # Run specific e2e test file
+```
+
+## Project Architecture
+
+### Technology Stack
+- **Frontend**: Vue 3 (Composition API + `<script setup>`), TypeScript 5, Vite 7
+- **Styling**: TailwindCSS v4 with utility classes, Tailwind merge, CVA for component variants
+- **State Management**: Pinia stores with setup syntax
+- **Routing**: Vue Router 4 with lazy loading
+- **Icons**: Lucide Vue Next
+- **Testing**: Vitest (unit) + Playwright (e2e) + jsdom environment
+- **Code Quality**: Biome for formatting/linting, strict TypeScript
+- **Future Backend**: SurrealDB with zero-knowledge client-side encryption
+
+### Directory Structure
+```
+src/
+├── components/          # Vue components (to be created)
+├── stores/             # Pinia stores (counter.ts example exists)
+├── router/             # Vue Router configuration (index.ts)
+├── lib/                # Utility functions (utils.ts for CSS helpers)
+└── style.css          # Global Tailwind imports
+
+tests/
+├── unit/               # Unit test files (*.spec.ts, *.test.ts)
+└── e2e/                # Playwright e2e tests (separate config)
+```
+
+### Key Configuration Files
+- `vite.config.ts`: Vite build config with Vue plugin, TailwindCSS, devtools
+- `vitest.config.ts`: Test config with jsdom environment, excludes e2e tests
+- `playwright.config.ts`: E2e config for Chromium/Firefox/WebKit, dev server integration
+- `biome.json`: Formatting (tabs, double quotes) and linting rules
+- `tsconfig.json`: TypeScript config with path mapping (`@/*` → `./src/*`)
+
+### Development Patterns
+- **Components**: Use Composition API with `<script setup>` syntax
+- **State**: Create domain-specific Pinia stores instead of single large store
+- **Routing**: Implement lazy loading, route guards, and meta fields for auth/permissions
+- **Testing**: Unit tests with Vitest, e2e tests with Playwright, jsdom for DOM testing
+- **Encryption**: All user data encrypted client-side (AES-256-GCM), server stores only encrypted content
+
+### Browser Requirements
+- Development: Chrome/Edge/Brave with Vue devtools extension recommended
+- Testing: Chromium, Firefox, WebKit via Playwright
+- Custom object formatters enabled for better Vue debugging experience
 
 ## FRONTEND
 
