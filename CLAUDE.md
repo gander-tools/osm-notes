@@ -221,6 +221,358 @@ tests/
 
 ## TESTING
 
+### TDD_METHODOLOGY
+
+#### CORE_PRINCIPLES
+
+**MANDATORY DEVELOPMENT APPROACH**: Test-Driven Development is the default and required methodology for all code development in this project. Code without tests is not acceptable.
+
+**RED → GREEN → REFACTOR Cycle**:
+1. **RED**: Write a failing test that describes the expected behavior
+2. **GREEN**: Write the minimal amount of code to make the test pass
+3. **REFACTOR**: Clean up and improve the code while keeping all tests green
+
+**Test-First Development**:
+- Always write the test before writing the implementation
+- Focus on behavior, not implementation details
+- One failing test at a time
+- Commit frequently during the cycle
+
+#### WORKFLOW
+
+**Development Environment Setup**:
+```sh
+# Terminal 1: Continuous TDD feedback loop
+bun test:unit                    # Vitest runs in watch mode by default
+
+# Terminal 2: Manual testing (when needed)
+bun dev                          # Development server
+```
+
+**TDD Workflow Steps**:
+1. Run `bun test:unit` in watch mode (continuous feedback)
+2. Write failing test that describes desired behavior (RED phase)
+3. Watch test fail (confirms test works correctly)
+4. Write minimal code to make test pass (GREEN phase)
+5. Watch test pass (confirms implementation works)
+6. Refactor code while keeping tests green (REFACTOR phase)
+7. Commit with conventional commit message
+8. Repeat cycle for next feature/requirement
+
+**Planning Tests**:
+```typescript
+// Use it.todo() for planning future tests
+describe('AuthStore', () => {
+	it.todo('should validate user credentials')
+	it.todo('should handle login errors')
+	it.todo('should persist session data')
+
+	it('initializes with empty state', () => {
+		// Implement this test first
+	})
+})
+```
+
+#### TEST_ORGANIZATION
+
+**File Structure Standards**:
+- Tests mirror source structure: `src/components/Note.vue` → `tests/unit/components/Note.spec.ts`
+- Use descriptive `describe` blocks for logical grouping
+- One assertion per test when possible (clear failure messages)
+- Follow AAA pattern: Arrange, Act, Assert
+
+**Naming Conventions**:
+```typescript
+// Good: Describes behavior
+describe('Note component', () => {
+	it('renders title when provided as prop', () => {})
+	it('emits save event when save button is clicked', () => {})
+	it('shows validation error for empty required fields', () => {})
+})
+
+// Bad: Describes implementation
+describe('Note component', () => {
+	it('has a title prop', () => {})
+	it('calls handleSave method', () => {})
+	it('sets error state', () => {})
+})
+```
+
+#### COMPONENT_TESTING_TDD
+
+**Vue 3 Component TDD Pattern**:
+```typescript
+// RED: Write failing test first
+import { mount } from '@vue/test-utils'
+import { describe, it, expect } from 'vitest'
+import Note from '@/components/Note.vue'
+
+describe('Note component', () => {
+	it('renders note title when provided', () => {
+		const wrapper = mount(Note, {
+			props: { title: 'Bridge inspection' }
+		})
+
+		expect(wrapper.find('h2').text()).toBe('Bridge inspection')
+	})
+
+	it('emits save event with note data when saved', () => {
+		const wrapper = mount(Note, {
+			props: { title: 'Test note', content: 'Test content' }
+		})
+
+		wrapper.find('button[data-testid="save"]').trigger('click')
+
+		expect(wrapper.emitted('save')).toBeTruthy()
+		expect(wrapper.emitted('save')[0]).toEqual([{
+			title: 'Test note',
+			content: 'Test content'
+		}])
+	})
+})
+
+// GREEN: Create minimal implementation to pass tests
+// REFACTOR: Improve component while keeping tests green
+```
+
+**Testing Checklist for Components**:
+- Props and their validation
+- Events and their payloads
+- Conditional rendering
+- User interactions (click, input, form submission)
+- Computed properties behavior
+- Slot content rendering
+
+#### STORE_TESTING_TDD
+
+**Pinia Store TDD Pattern**:
+```typescript
+// RED: Test store behavior first
+import { setActivePinia, createPinia } from 'pinia'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { useNotesStore } from '@/stores/notes'
+
+describe('NotesStore', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('initializes with empty notes array', () => {
+		const store = useNotesStore()
+		expect(store.notes).toEqual([])
+		expect(store.totalCount).toBe(0)
+	})
+
+	it('adds note when addNote action is called', () => {
+		const store = useNotesStore()
+		const newNote = { id: '1', title: 'Test', content: 'Content' }
+
+		store.addNote(newNote)
+
+		expect(store.notes).toContain(newNote)
+		expect(store.totalCount).toBe(1)
+	})
+})
+
+// GREEN: Implement store with minimal logic
+// REFACTOR: Optimize getters, actions, add error handling
+```
+
+**Testing Checklist for Stores**:
+- Initial state values
+- Getters with derived state
+- Actions and state mutations
+- Async actions with API calls (mocked)
+- Error handling scenarios
+- State persistence (if applicable)
+
+#### UTILITY_TESTING_TDD
+
+**Pure Function TDD Pattern**:
+```typescript
+// RED: Define expected behavior first
+import { describe, it, expect } from 'vitest'
+import { formatNoteDate, validateCoordinates } from '@/lib/utils'
+
+describe('formatNoteDate', () => {
+	it('formats date for display in note list', () => {
+		const date = new Date('2024-01-15T10:30:00Z')
+		expect(formatNoteDate(date)).toBe('Jan 15, 2024 10:30')
+	})
+
+	it('handles invalid date gracefully', () => {
+		expect(formatNoteDate(null)).toBe('Invalid date')
+	})
+})
+
+describe('validateCoordinates', () => {
+	it('returns true for valid latitude and longitude', () => {
+		expect(validateCoordinates(52.5200, 13.4050)).toBe(true)
+	})
+
+	it('returns false for out-of-range coordinates', () => {
+		expect(validateCoordinates(100, 200)).toBe(false)
+	})
+})
+
+// GREEN: Implement functions with minimal logic
+// REFACTOR: Optimize performance, add edge cases
+```
+
+#### VITEST_INTEGRATION
+
+**Leverage Vitest Features for TDD**:
+- **Watch Mode**: Default behavior provides instant feedback for RED/GREEN cycle
+- **Focus Testing**: Use `it.only()` or `describe.only()` during development
+- **Test Planning**: Use `it.todo()` for backlog of tests to write
+- **TypeScript**: Use `expectTypeOf()` for type-level assertions
+- **Mocking**: Use `vi.fn()`, `vi.spyOn()`, `vi.mock()` for isolation
+
+**TDD-Optimized Commands**:
+```sh
+bun test:unit                    # Default watch mode for TDD workflow
+bun test:unit --run              # Single run for CI/pre-push
+bun test:unit -t "note"          # Filter tests by name during focused development
+bun test:unit --coverage         # Coverage analysis (use sparingly)
+```
+
+#### TDD_ENFORCEMENT
+
+**Code Standards**:
+- **No implementation without tests**: All functions, components, and stores must have tests written first
+- **Minimal implementation**: Write only enough code to make the current test pass
+- **Behavior-driven**: Tests should describe what the code does, not how it does it
+- **Refactoring required**: Green tests are not the end - clean up the code
+
+**Git Workflow Integration**:
+- **Commits allowed during RED phase**: Failing tests can be committed (work in progress)
+- **Pre-push hook**: Full test suite must pass before pushing to remote
+- **CI/CD enforcement**: All tests must pass for merge approval
+- **Conventional commits**: Include test information in commit messages
+
+**Anti-Patterns to Avoid**:
+```typescript
+// ❌ DON'T: Write implementation first
+export function addNote(note) {
+	// Implementation without test
+}
+
+// ❌ DON'T: Test implementation details
+it('calls private method _validateNote', () => {
+	// Testing internals, not behavior
+})
+
+// ❌ DON'T: Overly complex test setup
+it('should work', () => {
+	// 50 lines of setup code
+})
+
+// ✅ DO: Write test first
+it('adds note to the store when addNote is called', () => {
+	// Clear behavior description
+})
+
+// ✅ DO: Test public interface
+it('returns validation error for invalid note data', () => {
+	// Testing observable behavior
+})
+
+// ✅ DO: Simple, focused tests
+it('calculates total when items are added', () => {
+	// One thing at a time
+})
+```
+
+#### REAL_WORLD_EXAMPLE
+
+**Complete TDD Cycle: Adding Note Encryption Feature**
+
+**Step 1 - RED Phase**:
+```typescript
+// tests/unit/lib/encryption.spec.ts
+import { describe, it, expect } from 'vitest'
+import { encryptNote, decryptNote } from '@/lib/encryption'
+
+describe('Note Encryption', () => {
+	it('encrypts note content with user key', () => {
+		const note = { title: 'Secret', content: 'Classified data' }
+		const userKey = 'user-encryption-key'
+
+		const encrypted = encryptNote(note, userKey)
+
+		expect(encrypted).not.toContain('Secret')
+		expect(encrypted).not.toContain('Classified data')
+		expect(encrypted).toMatch(/^[a-f0-9]{64,}$/) // Hex string
+	})
+
+	it('decrypts note content with same key', () => {
+		const original = { title: 'Secret', content: 'Classified data' }
+		const userKey = 'user-encryption-key'
+
+		const encrypted = encryptNote(original, userKey)
+		const decrypted = decryptNote(encrypted, userKey)
+
+		expect(decrypted).toEqual(original)
+	})
+})
+
+// Run: bun test:unit
+// Result: FAIL - encryptNote/decryptNote functions don't exist ✓ (RED complete)
+```
+
+**Step 2 - GREEN Phase**:
+```typescript
+// src/lib/encryption.ts - Minimal implementation
+export function encryptNote(note: any, key: string): string {
+	// Minimal AES encryption (simplified for example)
+	const jsonString = JSON.stringify(note)
+	return btoa(jsonString + key) // Basic encoding to pass test
+}
+
+export function decryptNote(encrypted: string, key: string): any {
+	const decoded = atob(encrypted)
+	const jsonString = decoded.replace(key, '')
+	return JSON.parse(jsonString)
+}
+
+// Run: bun test:unit
+// Result: PASS - Tests pass ✓ (GREEN complete)
+```
+
+**Step 3 - REFACTOR Phase**:
+```typescript
+// src/lib/encryption.ts - Production-ready implementation
+import { AES, enc } from 'crypto-js'
+
+export function encryptNote(note: NoteData, userKey: string): string {
+	const jsonString = JSON.stringify(note)
+	const encrypted = AES.encrypt(jsonString, userKey).toString()
+	return encrypted
+}
+
+export function decryptNote(encrypted: string, userKey: string): NoteData {
+	const decrypted = AES.decrypt(encrypted, userKey)
+	const jsonString = decrypted.toString(enc.Utf8)
+	return JSON.parse(jsonString)
+}
+
+// Add error handling, type safety, validation...
+// Run: bun test:unit
+// Result: PASS - Tests still pass with better implementation ✓ (REFACTOR complete)
+```
+
+**Step 4 - Commit**:
+```bash
+git add tests/unit/lib/encryption.spec.ts src/lib/encryption.ts
+git commit -m "feat(encryption): add note encryption with AES-256
+
+Implements zero-knowledge encryption for note content.
+Uses CryptoJS for production-ready AES encryption.
+Follows TDD methodology: RED → GREEN → REFACTOR.
+
+Tests cover basic encryption/decryption cycle with user key."
+```
+
 ### Guidelines for UNIT
 
 #### VITEST
