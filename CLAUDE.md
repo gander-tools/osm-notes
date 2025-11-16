@@ -84,6 +84,12 @@ See **[SurrealDB Schema Documentation](./.claude/db-schema.md)** for complete da
 - Client-side integration examples with surrealdb npm package
 - Security considerations and performance optimizations
 
+See **[Database Planning Summary](./.claude/db-plan.md)** for comprehensive planning decisions including:
+- Complete conversation summary and key decisions made
+- Security and scalability considerations with rationale
+- Unresolved issues and next steps for implementation
+- Architectural choices and their justifications
+
 ### Key Configuration Files
 - `vite.config.ts`: Vite build config with Vue plugin, TailwindCSS, devtools
 - `vitest.config.ts`: Test config with jsdom environment, excludes e2e tests
